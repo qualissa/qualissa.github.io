@@ -1,0 +1,274 @@
+---
+title: "QUALISALVADOR: Indicadores Econômicos (2020)" 
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+
+library(flexdashboard)
+library(sf)
+library(tmap)
+library(tidyverse)
+library(googlesheets4)
+library(plotly)
+library(zoo)
+library(hrbrthemes)
+
+```
+
+```{r get-data, message=FALSE, include=FALSE}
+
+
+```
+
+```{js}
+
+document.addEventListener("DOMContentLoaded", function(){
+    $('a[data-toggle="tab"]').on('click', function(e){
+      // find the tab index that is click
+      child = e.target.parentNode;
+      tabnum = Array.from(child.parentNode.children).indexOf(child);
+      // find in which column we are
+      column = $(e.target).closest("div[id]");
+      // show the same tab in the other column
+      columnid = column.attr("id");
+      if (columnid == "column") {
+        columnto = "column-1";
+});
+
+
+```
+
+Column { .tabset data-width=600}
+-----------------------------------------------------------------------
+### Desemprego dos chefes de família
+
+```{r}
+
+eco_qualis = read_sf("economia.shp")
+
+names(eco_qualis)[names(eco_qualis) == 'Desemprego'] <- '% chefes de família desempregados'
+
+names(eco_qualis)[names(eco_qualis) == 'NM_BAIRROS'] <- 'Bairro'
+
+
+intervalos <- c(0, 9.62, 19.82, 27.55, 40,76)
+ 
+mapa <- 
+  tm_shape(eco_qualis) +
+  tm_polygons(col ="% chefes de família desempregados", 
+              style="fixed",
+              breaks = intervalos,
+              textNA = "Sem informação",
+              palette = "OrRd",
+              id="Bairro",
+              title="Taxa de desemprego dos chefes de família (%)") +
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+
+mapa
+
+tmap_mode("view")
+tmap_last()
+
+
+```
+
+### Informalidade dos chefes de família
+
+```{r}
+
+names(eco_qualis)[names(eco_qualis) == 'informalid'] <- '% de informalidade dos chefes de família'
+
+eco_qualis$`% de informalidade dos chefes de família` = eco_qualis$`% de informalidade dos chefes de família`/100
+
+intervalos <- c(0, .17, .33, .47, .65,.81)
+ 
+mapa1 <- 
+  tm_shape(eco_qualis) +
+  tm_polygons(col ="% de informalidade dos chefes de família", 
+              style="fixed",
+              breaks = intervalos,
+              palette = "OrRd",
+              textNA = "Sem informação",
+              id="Bairro",
+              title="Taxa de informalidade dos chefes de família (%)")+
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+mapa1
+
+tmap_mode("view")
+
+
+```
+
+### Razão da renda familiar segundo cor/raça
+
+```{r}
+
+names(eco_qualis)[names(eco_qualis) == 'raca'] <- 'Razão da Renda Familiar segundo cor/raça'
+
+
+intervalos <- c(0, 0.95, 1.89, 2.74,3.1)
+ 
+mapa2 <- tm_shape(eco_qualis) +
+  tm_polygons(col ="Razão da Renda Familiar segundo cor/raça", 
+              style="fixed",
+              breaks = intervalos,
+              palette = "OrRd",
+              textNA = "Sem informação",
+              id="Bairro",
+              title="Razão entre renda média familiar per capita segundo\ncor/raça dos chefes de família (negros/brancos)")+
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+mapa2
+
+tmap_mode("view")
+
+
+```
+
+### Razão da renda familiar segundo sexo
+
+```{r}
+
+names(eco_qualis)[names(eco_qualis) == 'sexo'] <- 'Razão da renda familiar segundo sexo'
+
+
+intervalos <- c(0, 1.03, 1.44, 1.82,1.86)
+ 
+mapa3 <- 
+  tm_shape(eco_qualis) +
+  tm_polygons(col ="Razão da renda familiar segundo sexo", 
+              style="fixed",
+              breaks = intervalos,
+              palette = "OrRd",
+              textNA = "Sem informação",
+              id="Bairro",
+              title="Razão entre a renda média familiar per capita segundo\nsexo dos chefes de família (feminino/masculino)")+
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+mapa3
+
+tmap_mode("view")
+
+
+```
+
+### Renda média familiar per capita
+
+```{r}
+names(eco_qualis)[names(eco_qualis) == 'renda_med_'] <- 'Renda média familiar per capita (R$)'
+
+
+intervalos <- c(198.56, 1307.30, 2416.05, 3524.80,4633.55,5742.30)
+ 
+mapa4 <- 
+  tm_shape(eco_qualis) +
+  tm_polygons(col ="Renda média familiar per capita (R$)", 
+              style="fixed",
+              breaks = intervalos,
+              palette = "OrRd",
+              textNA = "Sem informação",
+              id="Bairro",
+              title="Renda média famliar per capita (R$)")+
+
+  tm_layout(legend.format = list(text.separator = "-" ,big.mark = ".",decimal.mark = ","))
+
+mapa4
+
+tmap_mode("view")
+
+```
+
+Column {data-width=400 .tabset}
+-----------------------------------------------------------------------
+
+### Gráfico: Desemprego dos chefes de família
+
+```{r}
+
+
+grafico1 <- ggplot(eco_qualis, aes(x =Bairro, y = `% chefes de família desempregados` )) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("% chefes de família desempregados")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "%")
+
+ggplotly(grafico1)
+
+```
+
+### Gráfico: Taxa de informalidade dos chefes de família
+
+```{r}
+
+grafico2 <- ggplot(eco_qualis, aes(x = Bairro, y = eco_qualis$`% de informalidade dos chefes de família`)) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("% de informalidade dos chefes de família")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "%")
+
+ggplotly(grafico2)
+
+```
+
+### Gráfico: Renda familiar segundo cor/raça
+
+```{r}
+
+grafico3 <- ggplot(eco_qualis, aes(x = Bairro, y = `Razão da Renda Familiar segundo cor/raça`)) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("Razão entre a renda média familiar per capita segundo\ncor/raça dos chefes de família")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "(Negros/Brancos)")
+
+ggplotly(grafico3)
+
+```
+
+### Gráfico: Razão da renda familiar segundo sexo
+
+```{r}
+
+grafico4 <- ggplot(eco_qualis, aes(x = Bairro, y = `Razão da renda familiar segundo sexo`)) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("Razão entre a renda média familiar per capita segundo\nsexo dos chefes de família")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "(Feminino/Masculino)")
+
+ggplotly(grafico4)
+
+```
+
+### Gráfico: Renda média familiar per capita
+
+```{r}
+
+grafico5 <- ggplot(eco_qualis, aes(x = Bairro, y = `Renda média familiar per capita (R$)`)) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("Renda média familiar per capita")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "R$")+
+  scale_y_continuous(labels=function(x) format(x,dec.mark=",", scientific = FALSE))
+
+ggplotly(grafico5)
+
+```

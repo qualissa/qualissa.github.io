@@ -1,0 +1,187 @@
+---
+title: "QUALISALVADOR: Indicadores de Inadequação Habitacional (2020)" 
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+
+library(flexdashboard)
+library(sf)
+library(tmap)
+library(tidyverse)
+library(googlesheets4)
+library(plotly)
+library(zoo)
+library(hrbrthemes)
+
+```
+
+```{r get-data, message=FALSE, include=FALSE}
+
+
+```
+
+```{js}
+
+document.addEventListener("DOMContentLoaded", function(){
+    $('a[data-toggle="tab"]').on('click', function(e){
+      // find the tab index that is click
+      child = e.target.parentNode;
+      tabnum = Array.from(child.parentNode.children).indexOf(child);
+      // find in which column we are
+      column = $(e.target).closest("div[id]");
+      // show the same tab in the other column
+      columnid = column.attr("id");
+      if (columnid == "column") {
+        columnto = "column-1";
+});
+
+
+```
+
+Column { .tabset data-width=600}
+-----------------------------------------------------------------------
+### Carência de creche, famílias chefiadas por mulheres com crianças 0-5 anos
+```{r}
+
+gen_qualis = read_sf("CapitúloRGC.shp")
+
+gen_qualis$`Capítul_2` = gen_qualis$`Capítul_2`*100
+
+names(gen_qualis)[names(gen_qualis) == 'Capítul_2'] <- 'Carência de creche (%)'
+
+names(gen_qualis)[names(gen_qualis) == 'NM_BAIRROS'] <- 'Bairro'
+
+
+intervalos <- c(0,0.1, 2, 3.8, 6.2, 28)
+ 
+mapa <- 
+  tm_shape(gen_qualis) +
+  tm_polygons(col ="Carência de creche (%)", 
+              style="fixed",
+              breaks = intervalos,
+              textNA = "Sem informação",
+              palette = "RdPu",
+              id="Bairro",
+              title="Carência de creche (%)") +
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+
+mapa
+
+tmap_mode("view")
+tmap_last()
+
+
+```
+
+### Razão de desemprego entre mulheres e homens chefes de família
+
+```{r}
+
+names(gen_qualis)[names(gen_qualis) == 'Capítul_7'] <- 'Razão entre mulheres e homens'
+
+
+intervalos <- c(0, 1, 2, 3, 5,44)
+ 
+mapa1 <- 
+  tm_shape(gen_qualis) +
+  tm_polygons(col ="Razão entre mulheres e homens", 
+              style="fixed",
+              breaks = intervalos,
+              palette = "RdPu",
+              id="Bairro",
+              title="Razão M/H chefes de família")+
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+mapa1
+
+tmap_mode("view")
+
+
+```
+
+### Razão de desemprego entre negros e brancos chefes de família
+
+```{r}
+
+names(gen_qualis)[names(gen_qualis) == 'Capítul_9'] <- 'Razão entre negros e brancos'
+
+
+intervalos <- c(0, 1, 2, 5, 10,15,60)
+ 
+mapa2 <- tm_shape(gen_qualis) +
+  tm_polygons(col ="Razão entre negros e brancos", 
+              style="fixed",
+              breaks = intervalos,
+              palette = "RdPu",
+              id="Bairro",
+              title="Razão N/B do desemprego dos chefes de família")+
+
+  tm_layout(legend.format = list(text.separator = "-"))
+
+mapa2
+
+tmap_mode("view")
+
+
+```
+
+
+Column {data-width=400 .tabset}
+-----------------------------------------------------------------------
+
+### Gráfico: Carência de creches, famílias chefiadas por mulheres com crianças 0-5 anos 
+
+```{r}
+
+
+
+grafico1 <- ggplot(gen_qualis, aes(x =`Bairro`, y = `Carência de creche (%)` )) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("Carência de creches (%)")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "%")
+
+ggplotly(grafico1)
+
+```
+
+### Gráfico: Razão de desemprego entre mulheres e homens chefes de família
+
+```{r}
+
+grafico2 <- ggplot(gen_qualis, aes(x = Bairro, y = `Razão entre mulheres e homens`)) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("Desemprego Mulheres/Homens")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "")
+
+ggplotly(grafico2)
+
+```
+
+### Gráfico: Razão de desemprego entre negros e brancos chefes de família
+
+```{r}
+
+grafico3 <- ggplot(gen_qualis, aes(x = Bairro, y = `Razão entre negros e brancos`)) + 
+  
+  geom_bar(stat="identity", color="blue", fill="white") +
+  ggtitle("Razão de desemprego Negros/Brancos")+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  labs(x = "Bairros", y = "")
+
+ggplotly(grafico3)
+
+```
